@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="GlobeTrotter - Your ultimate travel planning companion. Plan trips, manage itineraries, explore destinations, and connect with travelers worldwide.">
+    <meta name="keywords" content="travel, trip planning, itinerary, vacation, globe trotter, travel community">
+    <meta name="theme-color" content="#6366f1">
+    <title>GlobeTrotter - Plan Your Perfect Journey</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="config.js"></script>
+</head>
+
+<body>
+    <!-- Skip to Main Content (Accessibility) -->
+    <a href="#main-content" class="skip-to-main">Skip to main content</a>
+
+    <div class="app-container" id="app" role="main" id="main-content">
+
+        <!-- ===================================
+         SCREEN 1: LOGIN
+         =================================== -->
+        <div class="screen active" id="login-screen">
+            <div class="auth-container">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <h1 class="auth-logo">🌍 GlobeTrotter</h1>
+                        <p class="auth-tagline">Welcome back, traveler!</p>
+                    </div>
+
+                    <div class="profile-photo-preview" id="login-photo-preview">
+                        <div class="photo-placeholder">👤</div>
+                    </div>
+
+                    <form id="login-form" class="auth-form">
+                        <div class="form-group">
+                            <label class="form-label" for="login-username">Username or Email</label>
+                            <input type="text" id="login-username" class="form-input"
+                                placeholder="Enter your username or email" required autocomplete="username">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="login-password">Password</label>
+                            <input type="password" id="login-password" class="form-input"
+                                placeholder="Enter your password" required autocomplete="current-password">
+                        </div>
+
+                        <div class="form-row">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="remember-me">
+                                <span>Remember Me</span>
+                            </label>
+                            <a href="#" class="link-text" onclick="alert('Password reset feature coming soon!')">Forgot
+                                Password?</a>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block btn-lg mt-md">
+                            🚀 Login
+                        </button>
+
+                        <div class="divider">
+                            <span>OR</span>
+                        </div>
+
+                        <div class="social-login">
+                            <button type="button" class="btn btn-social btn-google"
+                                onclick="alert('Google login coming soon!')">
+                                <span class="social-icon">G</span> Continue with Google
+                            </button>
+                            <button type="button" class="btn btn-social btn-facebook"
+                                onclick="alert('Facebook login coming soon!')">
+                                <span class="social-icon">f</span> Continue with Facebook
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="auth-footer">
+                        <p>New to GlobeTrotter?</p>
+                        <button class="btn btn-link" onclick="navigateTo('signup')">Create an account</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================
+         SCREEN 2: REGISTRATION
+         =================================== -->
+        <div class="screen" id="signup-screen">
+            <div class="auth-container">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <h1 class="auth-logo">🌍 GlobeTrotter</h1>
+                        <p class="auth-tagline">Start your journey with us</p>
+                    </div>
+
+                    <div class="profile-photo-upload">
+                        <div class="photo-preview" id="signup-photo-preview">
+                            <div class="photo-placeholder">📷</div>
+                        </div>
+                        <input type="file" id="profile-photo-input" accept="image/*" style="display: none;">
+                        <button type="button" class="btn btn-sm btn-secondary"
+                            onclick="document.getElementById('profile-photo-input').click()">
+                            Upload Photo
+                        </button>
+                    </div>
+
+                    <form id="signup-form" class="auth-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="signup-firstname">First Name</label>
+                                <input type="text" id="signup-firstname" class="form-input" placeholder="First name"
+                                    required autocomplete="given-name">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="signup-lastname">Last Name</label>
+                                <input type="text" id="signup-lastname" class="form-input" placeholder="Last name"
+                                    required autocomplete="family-name">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="signup-email">Email Address</label>
+                                <input type="email" id="signup-email" class="form-input"
+                                    placeholder="your.email@example.com" required autocomplete="email">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="signup-phone">Phone Number</label>
+                                <input type="tel" id="signup-phone" class="form-input" placeholder="9876543210"
+                                    pattern="[0-9]*" inputmode="numeric" required autocomplete="tel">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="signup-city">City</label>
+                                <input type="text" id="signup-city" class="form-input" placeholder="Your city" required
+                                    autocomplete="address-level2">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="signup-country">Country</label>
+                                <input type="text" id="signup-country" class="form-input" placeholder="Your country"
+                                    required autocomplete="country-name">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="signup-bio">Additional Information</label>
+                            <textarea id="signup-bio" class="form-textarea" rows="3"
+                                placeholder="Tell us about yourself and your travel interests..."></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="signup-password">Password</label>
+                                <input type="password" id="signup-password" class="form-input"
+                                    placeholder="Create password" required autocomplete="new-password" minlength="8">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="signup-confirm-password">Confirm Password</label>
+                                <input type="password" id="signup-confirm-password" class="form-input"
+                                    placeholder="Confirm password" required autocomplete="new-password" minlength="8">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block btn-lg mt-md">
+                            📱 Register
+                        </button>
+                    </form>
+
+                    <div class="auth-footer">
+                        <p>Already have an account?</p>
+                        <button class="btn btn-link" onclick="navigateTo('login')">Sign in here</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================
+         SCREEN 3: MAIN LANDING PAGE
+         =================================== -->
+        <div class="screen" id="landing-screen">
+            <!-- Navigation Bar -->
+            <nav class="navbar">
+                <div class="navbar-container">
+                    <div class="navbar-brand" onclick="navigateTo('landing')">
+                        <span class="navbar-logo">🌍</span>
+                        <span class="navbar-title">GlobeTrotter</span>
+                    </div>
+                    <div class="navbar-menu">
+                        <a href="#" onclick="navigateTo('landing')" class="navbar-link active">Home</a>
+                        <a href="#" onclick="navigateTo('search')" class="navbar-link">Explore</a>
+                        <a href="#" onclick="navigateTo('trip-list')" class="navbar-link">My Trips</a>
+                        <a href="#" onclick="navigateTo('community')" class="navbar-link">Community</a>
+                        <a href="#" onclick="navigateTo('calendar')" class="navbar-link">Calendar</a>
+                        <div class="navbar-profile" onclick="navigateTo('profile')">
+                            <div class="navbar-avatar">👤</div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Hero Banner Carousel -->
+            <section class="hero-banner">
+                <div class="hero-carousel" id="hero-carousel">
+                    <div class="hero-slide active"
+                        style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop');">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content">
+                            <h1 class="hero-title">Discover Your Next Adventure</h1>
+                            <p class="hero-subtitle">Plan, explore, and experience the world like never before</p>
+                            <button class="btn btn-hero" onclick="navigateTo('create-trip')">Start Planning</button>
+                        </div>
+                    </div>
+                    <div class="hero-slide"
+                        style="background-image: url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1920&h=1080&fit=crop');">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content">
+                            <h1 class="hero-title">Explore Hidden Gems</h1>
+                            <p class="hero-subtitle">Find unique destinations and create unforgettable memories</p>
+                            <button class="btn btn-hero" onclick="navigateTo('search')">Explore Now</button>
+                        </div>
+                    </div>
+                    <div class="hero-slide"
+                        style="background-image: url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&h=1080&fit=crop');">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content">
+                            <h1 class="hero-title">Connect with Travelers</h1>
+                            <p class="hero-subtitle">Share experiences and get inspired by the community</p>
+                            <button class="btn btn-hero" onclick="navigateTo('community')">Join Community</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-indicators" id="hero-indicators"></div>
+            </section>
+
+            <!-- Search Bar -->
+            <section class="landing-search">
+                <div class="container">
+                    <div class="search-box-large">
+                        <input type="text" class="search-input-large"
+                            placeholder="🔍 Search destinations, activities, or trips..." id="landing-search-input">
+                        <button class="btn btn-primary search-btn-large"
+                            onclick="performLandingSearch()">Search</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Top Regional Selections -->
+            <section class="landing-section">
+                <div class="container">
+                    <h2 class="section-title">Popular Destinations</h2>
+                    <p class="section-subtitle">Discover the most loved travel destinations</p>
+
+                    <div class="destination-grid" id="destination-grid">
+                        <!-- Destinations will be loaded dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Previous Trips Carousel -->
+            <section class="landing-section bg-light">
+                <div class="container">
+                    <div class="section-header">
+                        <h2 class="section-title">Your Recent Trips</h2>
+                        <a href="#" onclick="navigateTo('trip-list')" class="link-text">View All →</a>
+                    </div>
+
+                    <div class="trips-carousel" id="recent-trips-carousel">
+                        <!-- Recent trips will be loaded dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Actions FAB -->
+            <button class="fab" onclick="navigateTo('create-trip')" title="Plan a new trip">
+                ➕
+            </button>
+        </div>
+
+        <!-- ===================================
+         SCREEN 4: CREATE NEW TRIP
+         =================================== -->
+        <div class="screen" id="create-trip-screen">
+            <nav class="navbar">
+                <div class="navbar-container">
+                    <button class="btn btn-icon" onclick="navigateTo('landing')">←</button>
+                    <h1 class="navbar-title">Create New Trip</h1>
+                    <div></div>
+                </div>
+            </nav>
+
+            <div class="container">
+                <div class="create-trip-container">
+                    <form id="create-trip-form" class="trip-form">
+                        <div class="form-group">
+                            <label class="form-label" for="trip-name">Trip Name</label>
+                            <input type="text" id="trip-name" class="form-input" placeholder="e.g., Summer in Bali"
+                                required maxlength="100">
+                            <small class="form-hint"><span id="trip-name-count">0</span>/100</small>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="trip-start-date">Start Date</label>
+                                <input type="date" id="trip-start-date" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="trip-end-date">End Date</label>
+                                <input type="date" id="trip-end-date" class="form-input" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="trip-destination">Select Place</label>
+                            <div class="location-autocomplete">
+                                <input type="text" id="trip-destination" class="form-input"
+                                    placeholder="Start typing location..." autocomplete="off" required>
+                                <div class="autocomplete-dropdown" id="location-dropdown"></div>
+                            </div>
+                            <div class="map-preview" id="map-preview" style="display: none;">
+                                <img src="" alt="Location preview" id="map-preview-img">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Budget</label>
+                            <div class="currency-input-group">
+                                <select id="trip-currency" class="currency-select">
+                                    <option value="USD">$ USD</option>
+                                    <option value="EUR">€ EUR</option>
+                                    <option value="GBP">£ GBP</option>
+                                    <option value="INR">₹ INR</option>
+                                    <option value="JPY">¥ JPY</option>
+                                </select>
+                                <input type="number" id="trip-budget" class="form-input budget-input"
+                                    placeholder="e.g., 2000" min="0" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Suggestions for Places to Visit/Activities to Perform</label>
+                            <div class="suggestion-grid" id="suggestion-grid">
+                                <!-- Suggestions will be loaded dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary"
+                                onclick="navigateTo('landing')">Cancel</button>
+                            <button type="submit" class="btn btn-primary">💾 Create Trip</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================
+         SCREEN 5: BUILD ITINERARY
+         =================================== -->
+        <div class="screen" id="itinerary-builder-screen">
+            <nav class="navbar">
+                <div class="navbar-container">
+                    <button class="btn btn-icon" onclick="navigateTo('trip-list')">←</button>
+                    <h1 class="navbar-title" id="itinerary-trip-name">Build Itinerary</h1>
+                    <button class="btn btn-primary btn-sm" onclick="saveItinerary()">Save</button>
+                </div>
+            </nav>
+
+            <div class="container">
+                <div class="itinerary-header">
+                    <div class="itinerary-info">
+                        <p class="itinerary-dates" id="itinerary-dates"></p>
+                        <p class="itinerary-budget" id="itinerary-budget-display"></p>
+                    </div>
+                </div>
+
+                <div class="itinerary-builder" id="itinerary-days">
+                    <!-- Days will be added dynamically -->
+                </div>
+
+                <button class="btn btn-secondary btn-block mt-lg" onclick="addItineraryDay()">
+                    ➕ Add Another Day
+                </button>
+            </div>
+        </div>
+
+        <!-- ===================================
+         SCREEN 6: USER TRIP LISTING
+         =================================== -->
+        <div class="screen" id="trip-list-screen">
+            <nav class="navbar">
+                <div class="navbar-container">
+                    <button class="btn btn-icon" onclick="navigateTo('landing')">←</button>
+                    <h1 class="navbar-title">My Trips</h1>
+                    <button class="btn btn-primary btn-sm" onclick="navigateTo('create-trip')">➕ New</button>
+                </div>
+            </nav>
+
+            <div class="container">
+                <div class="trip-filters">
+                    <button class="filter-btn active" data-filter="all" onclick="filterTrips('all')">All</button>
+                    <button class="filter-btn" data-filter="ongoing" onclick="filterTrips('ongoing')">Ongoing</button>
+                    <button class="filter-btn" data-filter="upcoming"
+                        onclick="filterTrips('upcoming')">Upcoming</button>
+                    <button class="filter-btn" data-filter="completed"
+                        onclick="filterTrips('completed')">Completed</button>
+                </div>
+
+                <div class="trip-list" id="trip-list">
+                    <!-- Trips will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================
+         SCREEN 7: USER PROFILE
+         =================================== -->
+        <div class="screen" id="profile-screen">
+            <nav class="navbar">
+                <div class="navbar-container">
+                    <button class="btn btn-icon" onclick="navigateTo('landing')">←</button>
+                    <h1 class="navbar-title">Profile</h1>
+                    <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
+                </div>
+            </nav>
+
+            <div class="container">
+                <div class="profile-header">
+                    <div class="profile-photo-large" id="profile-photo-display">
+                        <div class="photo-placeholder-large">👤</div>
+                    </div>
+                    <button class="btn btn-sm btn-secondary mt-sm"
+                        onclick="document.getElementById('profile-photo-edit').click()">
+                        Change Photo
+                    </button>
+                    <input type="file" id="profile-photo-edit" accept="image/*" style="display: none;">
+
+                    <h2 class="profile-name" id="profile-name">User Name</h2>
+                    <p class="profile-location" id="profile-location">📍 City, Country</p>
+                    <p class="profile-member-since" id="profile-member-since">Member since Jan 2026</p>
+
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <div class="stat-value" id="profile-trips-count">0</div>
+                            <div class="stat-label">Trips</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="profile-countries-count">0</div>
+                            <div class="stat-label">Countries</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="profile-cities-count">0</div>
+                            <div class="stat-label">Cities</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <h3 class="section-title">Personal Information</h3>
+                    <form id="profile-form" class="profile-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">First Name</label>
+                                <input type="text" id="profile-firstname" class="form-input" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" id="profile-lastname" class="form-input" readonly>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" id="profile-email" class="form-input" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" id="profile-phone" class="form-input" readonly>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">City</label>
+                                <input type="text" id="profile-city" class="form-input" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Country</label>
+                                <input type="text" id="profile-country" class="form-input" readonly>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Bio</label>
+                            <textarea id="profile-bio" class="form-textarea" rows="3" readonly></textarea>
+                        </div>
+                        <button type="button" class="btn btn-primary" id="edit-profile-btn"
+                            onclick="toggleProfileEdit()">
+                            Edit Profile
+                        </button>
+                    </form>
+                </div>
+
+                <div class="profile-section">
+                    <h3 class="section-title">Preplanned Trips</h3>
+                    <div class="profile-trips-grid" id="profile-preplanned-trips">
+                        <!-- Trips will be loaded -->
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <h3 class="section-title">Previous Trips</h3>
+                    <div class="profile-trips-grid" id="profile-previous-trips">
+                        <!-- Trips will be loaded -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================
+         SCREEN 8: ACTIVITY/CITY SEARCH
+         =================================== -->
+        <div class="screen" id="search-screen">
+            <nav class="navbar">
+                <div class="navbar-container">
+                    <button class="btn btn-icon" onclick="navigateTo('landing')">←</button>
+                    <h1 class="navbar-title">Explore</h1>
+                    <div></div>
+                </div>
+            </nav>
+
+            <div class="container">
+                <div class="search-header">
+                    <div class="search-box">
+                        <input type="text" class="search-input" placeholder="🔍 Search cities or activities..."
+                            id="search-input">
+                    </div>
+
+                    <div class="search-filters">
+                        <select class="filter-select" id="category-filter">
+                            <option value="">All Categories</option>
+                            <option value="sightseeing">Sightseeing</option>
+                            <option value="adventure">Adventure</option>
+                            <option value="dining">Dining</option>
+                            <option value="culture">Culture</option>
+                            <option value="nature">Nature</option>
+                        </select>
+                        <select class="filter-select" id="price-filter">
+                            <option value="">All Prices</option>
+                            <option value="budget">Budget ($)</option>
+                            <option value="moderate">Moderate ($$)</option>
+                            <option value="luxury">Luxury ($$$)</option>
+                        </select>
+                        <select class="filter-select" id="sort-filter">
+                            <option value="popular">Most Popular</option>
+                            <option value="rating">Highest Rated</option>
+                            <option value="price-low">Price: Low to High</option>
+                            <option value="price-high">Price: High to Low</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="search-results" id="search-results">
+                    <!-- Results will be loaded dynamically -->
+                </div>
+
+                <div class="load-more-container" id="load-more-container" style="display: none;">
+                    <button class="btn btn-secondary" onclick="loadMoreResults()">Load More</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================
+         SCREEN 9: ITINERARY VIEW WITH BUDGET
+         =================================== -->
+        <div class="screen" id="itinerary-view-screen">
+            <nav class="navbar">
+                <div class="navbar-container">
+                    <button class="btn btn-icon" onclick="navigateTo('trip-list')">←</button>
+                    <h1 class="navbar-title" id="view-trip-name">Trip Itinerary</h1>
+                    <div class="navbar-actions">
+                        <button class="btn btn-icon" onclick="editItinerary()" title="Edit">✏️</button>
+                        <button class="btn btn-icon" onclick="shareTrip()" title="Share">📤</button>
+                        <button class="btn btn-icon" onclick="deleteTrip()" title="Delete">🗑️</button>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container">
+                <div class="itinerary-view-header">
+                    <p class="trip-dates" id="view-trip-dates"></p>
+                    <p class="trip-destination" id="view-trip-destination"></p>
+                </div>
+
+                <div class="itinerary-content">
+                    <div class="itinerary-timeline" id="itinerary-timeline">
+                        <!-- Timeline will be loaded -->
+                    </div>
+
+                    <div class="budget-section">
+                        <h3 class="section-title">Budget Overview</h3>
+                        <div class="budget-summary">
+                            <div class="budget-item">
+                                <span class="budget-label">Total Budget:</span>
+                                <span class="budget-value" id="view-total-budget">$0</span>
+                            </div>
+                            <div class="budget-item">
+                                <span class="budget-label">Spent:</span>
+                                <span class="budget-value spent" id="view-spent-budget">$0</span>
+                            </div>
+                            <div class="budget-item">
+                                <span class="budget-label">Remaining:</span>
+                                <span class="budget-value remaining" id="view-remaining-budget">$0</span>
+                            </div>
+                        </div>
+
+                        <div class="budget-chart">
+                            <canvas id="budget-chart-canvas"></canvas>
+                        </div>
+
+                        <div class="expense-list" id="expense-list">
+                            <!-- Expenses will be loaded -->
+                        </div>
+
+                        <button class="btn btn-secondary btn-block mt-md" onclick="addExpense()">
+                            ➕ Add Expense
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================
+         SCREEN 10: COMMUNITY TAB
+         =================================== -->
+        <div class="screen" id="community-screen">
+            <nav class="navbar">
+                <div class="navbar-container">
+                    <button class="btn btn-icon" onclick="navigateTo('landing')">←</button>
+                    <h1 class="navbar-title">Community</h1>
+                    <button class="btn btn-primary btn-sm" onclick="createPost()">✍️ Post</button>
+                </div>
+            </nav>
+
+            <div class="container">
+                <div class="community-filters">
+                    <button class="filter-btn active" data-filter="latest"
+                        onclick="filterPosts('latest')">Latest</button>
+                    <button class="filter-btn" data-filter="popular" onclick="filterPosts('popular')">Popular</button>
+                    <button class="filter-btn" data-filter="following"
+                        onclick="filterPosts('following')">Following</button>
+                </div>
+
+                <div class="community-feed" id="community-feed">
+                    <!-- Posts will be loaded dynamically -->
+                </div>
+            </div>
+
+            <button class="fab" onclick="createPost()" title="Create a post">
+                ✍️
+            </button>
+        </div>
+
+        <!-- ===================================
+         SCREEN 11: CALENDAR VIEW
+         =================================== -->
+        <div class="screen" id="calendar-screen">
+            <nav class="navbar">
+                <div class="navbar-container">
+                    <button class="btn btn-icon" onclick="navigateTo('landing')">←</button>
+                    <h1 class="navbar-title">Calendar</h1>
+                    <div class="calendar-view-toggle">
+                        <button class="btn btn-sm" onclick="changeCalendarView('month')">Month</button>
+                        <button class="btn btn-sm" onclick="changeCalendarView('week')">Week</button>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container">
+                <div class="calendar-header">
+                    <button class="btn btn-icon" onclick="previousMonth()">←</button>
+                    <h2 class="calendar-title" id="calendar-title">January 2026</h2>
+                    <button class="btn btn-icon" onclick="nextMonth()">→</button>
+                </div>
+
+                <div class="calendar-container" id="calendar-container">
+                    <!-- Calendar will be rendered -->
+                </div>
+
+                <div class="calendar-legend">
+                    <div class="legend-item">
+                        <span class="legend-color ongoing"></span>
+                        <span>Ongoing</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color upcoming"></span>
+                        <span>Upcoming</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color completed"></span>
+                        <span>Completed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================
+         SCREEN 12: ADMIN PANEL
+         =================================== -->
+        <div class="screen" id="admin-screen">
+            <nav class="navbar navbar-admin">
+                <div class="navbar-container">
+                    <h1 class="navbar-title">🛡️ Admin Panel</h1>
+                    <button class="btn btn-secondary btn-sm" onclick="navigateTo('landing')">Exit Admin</button>
+                </div>
+            </nav>
+
+            <div class="container">
+                <div class="admin-dashboard">
+                    <div class="admin-stats">
+                        <div class="admin-stat-card">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="admin-total-users">0</div>
+                                <div class="stat-label">Total Users</div>
+                            </div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="stat-icon">✈️</div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="admin-total-trips">0</div>
+                                <div class="stat-label">Total Trips</div>
+                            </div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="stat-icon">📝</div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="admin-total-posts">0</div>
+                                <div class="stat-label">Community Posts</div>
+                            </div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="stat-icon">🎯</div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="admin-active-users">0</div>
+                                <div class="stat-label">Active Today</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-tabs">
+                        <button class="admin-tab active" data-tab="users"
+                            onclick="switchAdminTab('users')">Users</button>
+                        <button class="admin-tab" data-tab="content" onclick="switchAdminTab('content')">Content
+                            Moderation</button>
+                        <button class="admin-tab" data-tab="analytics"
+                            onclick="switchAdminTab('analytics')">Analytics</button>
+                        <button class="admin-tab" data-tab="settings"
+                            onclick="switchAdminTab('settings')">Settings</button>
+                    </div>
+
+                    <div class="admin-content">
+                        <!-- Users Tab -->
+                        <div class="admin-tab-content active" id="admin-users-tab">
+                            <div class="admin-search">
+                                <input type="text" class="search-input" placeholder="Search users..."
+                                    id="admin-user-search">
+                            </div>
+                            <div class="admin-table" id="admin-users-table">
+                                <!-- User table will be loaded -->
+                            </div>
+                        </div>
+
+                        <!-- Content Moderation Tab -->
+                        <div class="admin-tab-content" id="admin-content-tab">
+                            <h3>Flagged Content</h3>
+                            <div class="flagged-content" id="flagged-content">
+                                <!-- Flagged posts will be loaded -->
+                            </div>
+                        </div>
+
+                        <!-- Analytics Tab -->
+                        <div class="admin-tab-content" id="admin-analytics-tab">
+                            <h3>Platform Analytics</h3>
+                            <div class="analytics-charts">
+                                <div class="chart-container">
+                                    <h4>User Growth</h4>
+                                    <canvas id="user-growth-chart"></canvas>
+                                </div>
+                                <div class="chart-container">
+                                    <h4>Popular Destinations</h4>
+                                    <canvas id="destinations-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Settings Tab -->
+                        <div class="admin-tab-content" id="admin-settings-tab">
+                            <h3>Platform Settings</h3>
+                            <form class="admin-settings-form">
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="enable-registrations" checked>
+                                        <span>Enable New Registrations</span>
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="enable-community" checked>
+                                        <span>Enable Community Features</span>
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="auto-moderate" checked>
+                                        <span>Auto-Moderate Content</span>
+                                    </label>
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="saveAdminSettings()">Save
+                                    Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Modals will be added dynamically -->
+    <div id="modal-container"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
