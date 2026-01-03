@@ -156,4 +156,4 @@ backend/
 
 ---
 
-Built with ❤️ for GlobeTrotter hackathon project
+Built for GlobeTrotter hackathon project
