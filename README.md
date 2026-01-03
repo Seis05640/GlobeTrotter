@@ -71,7 +71,7 @@ A modern, feature-rich travel planning web application with real-time OTP authen
 
 3. **Configure API keys** (optional - app works in demo mode without them):
    - Copy `.env.example` and review the setup instructions
-   - Edit `config.js` and replace placeholder API keys
+   - Edit `frontend/config.js` and replace placeholder API keys
    - Set feature flags to `true` for enabled APIs
 
 4. **Run the application**:
@@ -85,12 +85,12 @@ A modern, feature-rich travel planning web application with real-time OTP authen
    # Using PHP
    php -S localhost:8000
    
-   # Or simply open index.html in your browser
+   # Or simply open frontend/index.html in your browser
    ```
 
 5. **Access the app**:
-   - Navigate to `http://localhost:8000` (or the port you chose)
-   - Or open `index.html` directly in your browser
+   - Navigate to `http://localhost:8000/frontend` (or the port you chose)
+   - Or open `frontend/index.html` directly in your browser
 
 ## 🔑 API Configuration
 
@@ -98,7 +98,7 @@ A modern, feature-rich travel planning web application with real-time OTP authen
 
 #### 1. Firebase (Real-time OTP)
 ```javascript
-// In config.js
+// In frontend/config.js
 FIREBASE: {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -111,7 +111,7 @@ FEATURES.REAL_OTP: true
 
 #### 2. Google Places (Location Autocomplete)
 ```javascript
-// In config.js
+// In frontend/config.js
 GOOGLE_PLACES_API_KEY: "YOUR_API_KEY"
 FEATURES.GOOGLE_PLACES: true
 ```
@@ -119,7 +119,7 @@ FEATURES.GOOGLE_PLACES: true
 
 #### 3. Unsplash (Automatic Images)
 ```javascript
-// In config.js
+// In frontend/config.js
 UNSPLASH_ACCESS_KEY: "YOUR_ACCESS_KEY"
 FEATURES.UNSPLASH_IMAGES: true
 ```
@@ -127,7 +127,7 @@ FEATURES.UNSPLASH_IMAGES: true
 
 #### 4. ExchangeRate-API (Currency Conversion)
 ```javascript
-// In config.js
+// In frontend/config.js
 EXCHANGE_RATE_API_KEY: "YOUR_API_KEY"
 FEATURES.CURRENCY_CONVERSION: true
 ```
@@ -145,10 +145,11 @@ The app works perfectly without any API keys:
 
 ```
 GlobeTrotter/
-├── index.html          # Main HTML file
-├── styles.css          # Complete CSS with design system
-├── script.js           # Consolidated JavaScript (all features)
-├── config.js           # API configuration
+├── frontend/
+│   ├── index.html      # Main HTML file
+│   ├── styles.css      # Complete CSS with design system
+│   ├── script.js       # Consolidated JavaScript (all features)
+│   └── config.js       # API configuration
 ├── .env.example        # API setup documentation
 ├── README.md           # This file
 └── .git/               # Git repository
@@ -240,24 +241,24 @@ For production deployment:
 ## 🐛 Troubleshooting
 
 ### OTP not working
-- Check Firebase configuration in `config.js`
+- Check Firebase configuration in `frontend/config.js`
 - Ensure Firebase Authentication is enabled
 - Verify phone number format includes country code
 - Check browser console for errors
 
 ### Location autocomplete not showing
-- Verify Google Places API key in `config.js`
+- Verify Google Places API key in `frontend/config.js`
 - Ensure Places API is enabled in Google Cloud Console
 - Check API key restrictions
 - Demo mode should work without API key
 
 ### Images not loading
-- Check Unsplash API key in `config.js`
+- Check Unsplash API key in `frontend/config.js`
 - Verify API rate limits haven't been exceeded
 - Fallback to Unsplash Source should work automatically
 
 ### Currency conversion not updating
-- Check ExchangeRate-API key in `config.js`
+- Check ExchangeRate-API key in `frontend/config.js`
 - Verify internet connection
 - Static rates should work as fallback
 
