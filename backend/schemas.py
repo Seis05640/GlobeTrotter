@@ -96,4 +96,14 @@ class MessageResponse(BaseModel):
 class BudgetResponse(BaseModel):
     trip_id: int
     total_budget: float
+    trip_id: int
+    total_budget: float
     breakdown: List[StopBudgetBreakdown]
+
+
+class SuggestionResponse(BaseModel):
+    name: str
+    category: str
+    estimated_cost: float
+    rating: float
+    image: str = "https://images.unsplash.com/photo-1527631746610-bca00a040d60?w=400"  # Default placeholder

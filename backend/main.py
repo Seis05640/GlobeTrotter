@@ -43,6 +43,15 @@ def create_trip(trip: schemas.TripCreate, db: Session = Depends(get_db)):
     db.refresh(db_trip)
     return db_trip
 
+    db.refresh(db_trip)
+    return db_trip
+
+
+@app.get("/trips", response_model=List[schemas.TripResponse])
+def get_trips(db: Session = Depends(get_db)):
+    """Get all trips."""
+    return db.query(models.Trip).all()
+
 
 @app.get("/trip/{trip_id}", response_model=schemas.TripResponse)
 def get_trip(trip_id: int, db: Session = Depends(get_db)):
@@ -221,6 +230,46 @@ async def websocket_endpoint(websocket: WebSocket, trip_id: int, client_id: str,
             
     except WebSocketDisconnect:
         manager.disconnect(websocket, trip_id)
+
+
+# ===== AI Suggestions Endpoint =====
+
+MOCK_SUGGESTIONS = {
+    "paris": [
+        {"name": "Eiffel Tower Visit", "category": "Sightseeing", "estimated_cost": 30.0, "rating": 4.8, "image": "https://images.unsplash.com/photo-1543349689-9a4d426bee8e?w=400"},
+        {"name": "Louvre Museum", "category": "Culture", "estimated_cost": 20.0, "rating": 4.7, "image": "https://images.unsplash.com/photo-1499856871940-a09e3f90b4e1?w=400"},
+        {"name": "Seine River Cruise", "category": "Adventure", "estimated_cost": 15.0, "rating": 4.5, "image": "https://images.unsplash.com/photo-1626577322967-33afc6cb51b7?w=400"},
+    ],
+    "tokyo": [
+        {"name": "Senso-ji Temple", "category": "Culture", "estimated_cost": 0.0, "rating": 4.9, "image": "https://images.unsplash.com/photo-1542931287-023b922fa89b?w=400"},
+        {"name": "Akihabara Shopping", "category": "Shopping", "estimated_cost": 100.0, "rating": 4.6, "image": "https://images.unsplash.com/photo-1616853534958-86d4e214ae90?w=400"},
+        {"name": "Sushi Making Class", "category": "Dining", "estimated_cost": 80.0, "rating": 4.8, "image": "https://images.unsplash.com/photo-1579584425555-d3715dfd8d60?w=400"},
+    ],
+    "bali": [
+        {"name": "Surf Lesson", "category": "Adventure", "estimated_cost": 40.0, "rating": 4.9, "image": "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400"},
+        {"name": "Rice Terrace Walk", "category": "Nature", "estimated_cost": 5.0, "rating": 4.7, "image": "https://images.unsplash.com/photo-1555400082-6b3a1c8f8f0e?w=400"},
+        {"name": "Uluwatu Temple", "category": "Culture", "estimated_cost": 10.0, "rating": 4.8, "image": "https://images.unsplash.com/photo-1537553753697-3f365d953a77?w=400"},
+    ]
+}
+
+@app.get("/suggestions", response_model=List[schemas.SuggestionResponse])
+def get_suggestions(city: str):
+    """
+    Get AI-powered activity suggestions for a city.
+    Uses mock data for demo purposes, falling back to generic items if city unknown.
+    """
+    city_lower = city.lower().strip()
+    
+    # Simple keyword matching for demo
+    if city_lower in MOCK_SUGGESTIONS:
+        return MOCK_SUGGESTIONS[city_lower]
+    
+    # Generic fallback
+    return [
+        {"name": f"Explore {city} City Center", "category": "Sightseeing", "estimated_cost": 0.0, "rating": 4.5, "image": "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400"},
+        {"name": f"Local Food Tour in {city}", "category": "Dining", "estimated_cost": 50.0, "rating": 4.6, "image": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400"},
+        {"name": f"{city} Museum Visit", "category": "Culture", "estimated_cost": 25.0, "rating": 4.4, "image": "https://images.unsplash.com/photo-1518998053901-5348d3969105?w=400"},
+    ]
 
 
 # ===== Health Check =====

@@ -32,6 +32,8 @@ const STORAGE_KEYS = {
 // ===================================
 // MOCK DATA
 // ===================================
+const API_BASE = 'http://localhost:8000';
+
 const MOCK_DESTINATIONS = [
     { name: 'Paris', country: 'France', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800', stats: '2.5M visitors' },
     { name: 'Tokyo', country: 'Japan', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800', stats: '1.8M visitors' },
@@ -323,47 +325,6 @@ function loadDestinations() {
     `).join('');
 }
 
-function loadRecentTrips() {
-    const carousel = document.getElementById('recent-trips-carousel');
-    const trips = getTrips().slice(0, 5);
-
-    if (trips.length === 0) {
-        carousel.innerHTML = '<p style="color: var(--text-muted); text-align: center; width: 100%;">No trips yet. Start planning your first adventure!</p>';
-        return;
-    }
-
-    carousel.innerHTML = trips.map(trip => {
-        const currencySymbol = getCurrencySymbol(trip.currency);
-        return `
-            <div class="trip-card-carousel" onclick="viewTrip('${trip.id}')">
-                <div class="trip-image-container">
-                    ${trip.imageUrl
-                ? `<img src="${trip.imageUrl}" alt="${trip.name}" class="trip-image" loading="lazy">`
-                : '<div class="trip-image-placeholder">🌍</div>'
-            }
-                </div>
-                <div class="trip-content">
-                    <h3 class="trip-title">${trip.name}</h3>
-                    <div class="trip-destination">📍 ${trip.destination}</div>
-                    <div class="trip-meta">
-                        <div class="trip-dates">📅 ${formatDate(trip.startDate)}</div>
-                        <div class="trip-budget">${currencySymbol}${Number(trip.budget).toLocaleString()}</div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function performLandingSearch() {
-    const query = document.getElementById('landing-search-input').value;
-    if (query.trim()) {
-        document.getElementById('search-input').value = query;
-        navigateTo('search');
-    }
-}
-
-window.performLandingSearch = performLandingSearch;
 
 function exploreDestination(name) {
     document.getElementById('search-input').value = name;
@@ -381,7 +342,7 @@ function getTrips() {
 }
 
 function getAllTrips() {
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.TRIPS) || '[]');
+    return AppState.allTrips || [];
 }
 
 function saveTrip(tripData) {
@@ -411,64 +372,179 @@ function getTripStatus(startDate, endDate) {
 function handleCreateTrip(event) {
     event.preventDefault();
 
-    const tripData = {
-        name: document.getElementById('trip-name').value,
-        destination: document.getElementById('trip-destination').value,
-        startDate: document.getElementById('trip-start-date').value,
-        endDate: document.getElementById('trip-end-date').value,
-        budget: document.getElementById('trip-budget').value,
-        currency: document.getElementById('trip-currency').value,
-        imageUrl: AppState.selectedLocation?.imageUrl || `https://source.unsplash.com/800x600/?${encodeURIComponent(document.getElementById('trip-destination').value)},travel`,
-        itinerary: []
-    };
+    const name = document.getElementById('trip-name').value;
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
+    const destination = document.getElementById('trip-destination').value; // Get destination
+    const budget = parseFloat(document.getElementById('trip-budget').value) || 0;
 
-    showLoading();
-
-    setTimeout(() => {
-        saveTrip(tripData);
-        hideLoading();
-        showToast('Trip created successfully!', 'success');
-        event.target.reset();
-        navigateTo('trip-list');
-    }, 500);
-}
-
-function loadTripList() {
-    const trips = getTrips();
-    const container = document.getElementById('trip-list');
-
-    if (trips.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No trips yet. Create your first trip!</p>';
+    if (!name || !startDate || !endDate || !destination) {
+        showToast('Please fill in all required fields', 'error');
         return;
     }
 
-    container.innerHTML = trips.map(trip => {
-        const currencySymbol = getCurrencySymbol(trip.currency);
-        return `
-            <div class="trip-card-full" data-status="${trip.status}">
-                <div class="trip-status-badge ${trip.status}">${trip.status}</div>
-                <div class="trip-image-container">
-                    ${trip.imageUrl
-                ? `<img src="${trip.imageUrl}" alt="${trip.name}" class="trip-image" loading="lazy">`
-                : '<div class="trip-image-placeholder">🌍</div>'
-            }
-                </div>
-                <div class="trip-content">
-                    <h3 class="trip-title">${trip.name}</h3>
-                    <div class="trip-destination">📍 ${trip.destination}</div>
-                    <div class="trip-meta">
-                        <div class="trip-dates">📅 ${formatDate(trip.startDate)} - ${formatDate(trip.endDate)}</div>
-                        <div class="trip-budget">${currencySymbol}${Number(trip.budget).toLocaleString()}</div>
-                    </div>
-                </div>
-                <div class="trip-card-actions">
-                    <button class="btn btn-sm btn-primary" onclick="viewTripDetails('${trip.id}')">View</button>
-                    <button class="btn btn-sm btn-secondary" onclick="editItinerary('${trip.id}')">Edit Itinerary</button>
-                    <button class="btn btn-sm btn-secondary" onclick="shareTrip('${trip.id}')">Share</button>
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-sm"></span> Creating...';
+
+    // 1. Create Trip
+    fetch(`${API_BASE}/trip`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            name: name,
+            start_date: startDate,
+            end_date: endDate
+        })
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to create trip');
+            return response.json();
+        })
+        .then(newTrip => {
+            // 2. Add Default Stop (Destination)
+            const days = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
+
+            return fetch(`${API_BASE}/trip/${newTrip.id}/stop`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    city: destination,
+                    duration_days: days || 1
+                })
+            });
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to add stop');
+            return response.json();
+        })
+        .then(() => {
+            showToast('Trip created successfully! 🚀', 'success');
+            event.target.reset();
+            navigateTo('trip-list');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error creating trip. Please try again.', 'error');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        });
+}
+function loadSuggestions(city) {
+    const grid = document.getElementById('suggestion-grid');
+    if (!city || city.length < 3) {
+        grid.innerHTML = '<p class="text-muted">Type a destination to see suggestions.</p>';
+        return;
+    }
+
+    // Call Backend API
+    // Assuming backend is running on localhost:8000
+    fetch(`http://localhost:8000/suggestions?city=${encodeURIComponent(city)}`)
+        .then(response => response.json())
+        .then(suggestions => {
+            renderSuggestions(suggestions);
+        })
+        .catch(err => {
+            console.error("Error fetching suggestions:", err);
+            grid.innerHTML = '<p class="text-error">Failed to load suggestions.</p>';
+        });
+}
+
+function renderSuggestions(suggestions) {
+    const grid = document.getElementById('suggestion-grid');
+    if (!suggestions || suggestions.length === 0) {
+        grid.innerHTML = '<p class="text-muted">No suggestions found for this place.</p>';
+        return;
+    }
+
+    grid.innerHTML = suggestions.map((item, index) => `
+        <div class="suggestion-card" onclick="toggleSuggestion(this, '${item.name}', ${item.estimated_cost})">
+            <img src="${item.image}" alt="${item.name}" class="suggestion-image" loading="lazy">
+            <div class="suggestion-content">
+                <div class="suggestion-title">${item.name}</div>
+                <div class="suggestion-meta">
+                    <span>${item.category}</span>
+                    <span>$${item.estimated_cost}</span>
                 </div>
             </div>
-        `;
-    }).join('');
+        </div>
+    `).join('');
+}
+
+function toggleSuggestion(card, name, cost) {
+    card.classList.toggle('selected');
+    // Logic to add to itinerary data could go here
+    if (card.classList.contains('selected')) {
+        // Add to temporary set
+    }
+}
+
+window.loadSuggestions = loadSuggestions;
+window.toggleSuggestion = toggleSuggestion;
+
+function loadTripList() {
+    const container = document.getElementById('trip-list');
+
+    // Show skeleton/loading state
+    container.innerHTML = '<div class="loader">Loading trips...</div>';
+
+    fetch(`${API_BASE}/trips`)
+        .then(res => {
+            if (!res.ok) throw new Error('Failed to fetch trips');
+            return res.json();
+        })
+        .then(trips => {
+            if (trips.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">✈️</div>
+                        <h3>No trips planned yet</h3>
+                        <p>Start your adventure by creating a new trip!</p>
+                        <button class="btn btn-primary" onclick="navigateTo('create-trip')">Plan a Trip</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Store trips globally so we can access them in viewTripDetails without re-fetching for now
+            AppState.allTrips = trips;
+
+            container.innerHTML = trips.map(trip => {
+                const destination = trip.stops && trip.stops.length > 0 ? trip.stops[0].city : 'Undecided';
+                return `
+                <div class="trip-card" onclick="viewTripDetails(${trip.id})">
+                    <div class="trip-image" style="background-image: url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800')">
+                        <div class="trip-status ongoing">Planned</div>
+                    </div>
+                    <div class="trip-content">
+                        <div class="trip-header">
+                            <h3 class="trip-title">${trip.name}</h3>
+                            <div class="trip-dates">${formatDate(trip.start_date)} - ${formatDate(trip.end_date)}</div>
+                        </div>
+                        <div class="trip-destination-tag">📍 ${destination}</div>
+                        <div class="trip-stats">
+                            <div class="trip-stat">
+                                <span class="stat-value">${trip.stops ? trip.stops.length : 0}</span>
+                                <span class="stat-label">Stops</span>
+                            </div>
+                            <div class="trip-stat">
+                                <span class="stat-value">${getDaysDifference(trip.start_date, trip.end_date)}</span>
+                                <span class="stat-label">Days</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+        })
+        .catch(err => {
+            console.error(err);
+            container.innerHTML = '<p class="text-error">Failed to load trips.</p>';
+        });
 }
 
 function filterTrips(status) {
@@ -543,15 +619,6 @@ function loadProfile() {
     document.getElementById('profile-location').textContent = `📍 ${user.city}, ${user.country}`;
     document.getElementById('profile-member-since').textContent = `Member since ${formatDate(user.joinedDate)}`;
 
-    // Load stats
-    const trips = getTrips();
-    const destinations = new Set(trips.map(t => t.destination.split(',')[1]?.trim() || t.destination));
-    const cities = new Set(trips.map(t => t.destination.split(',')[0]?.trim()));
-
-    document.getElementById('profile-trips-count').textContent = trips.length;
-    document.getElementById('profile-countries-count').textContent = destinations.size;
-    document.getElementById('profile-cities-count').textContent = cities.size;
-
     // Load form
     document.getElementById('profile-firstname').value = user.firstName;
     document.getElementById('profile-lastname').value = user.lastName;
@@ -561,12 +628,8 @@ function loadProfile() {
     document.getElementById('profile-country').value = user.country;
     document.getElementById('profile-bio').value = user.bio || '';
 
-    // Load trips
-    const upcomingTrips = trips.filter(t => t.status === 'upcoming').slice(0, 3);
-    const completedTrips = trips.filter(t => t.status === 'completed').slice(0, 3);
-
-    document.getElementById('profile-preplanned-trips').innerHTML = renderProfileTrips(upcomingTrips);
-    document.getElementById('profile-previous-trips').innerHTML = renderProfileTrips(completedTrips);
+    // Stats and recent trips are currently not linked to backend in this Profile view
+    // We can todo: implement profile stats backend endpoint
 }
 
 function renderProfileTrips(trips) {
@@ -575,7 +638,7 @@ function renderProfileTrips(trips) {
     }
 
     return trips.map(trip => `
-        <div class="trip-card-carousel" onclick="viewTripDetails('${trip.id}')">
+                    < div class="trip-card-carousel" onclick = "viewTripDetails('${trip.id}')" >
             <div class="trip-image-container">
                 ${trip.imageUrl
             ? `<img src="${trip.imageUrl}" alt="${trip.name}" class="trip-image" loading="lazy">`
@@ -587,8 +650,8 @@ function renderProfileTrips(trips) {
                 <p>${trip.destination}</p>
                 <button class="btn btn-sm btn-primary mt-sm">View</button>
             </div>
-        </div>
-    `).join('');
+        </div >
+                    `).join('');
 }
 
 function toggleProfileEdit() {
@@ -666,25 +729,25 @@ function renderSearchResults(results) {
     }
 
     container.innerHTML = results.map(activity => `
-        <div class="result-card">
-            <img src="${activity.image}" alt="${activity.name}" class="result-image" loading="lazy">
-            <div class="result-content">
-                <h3 class="result-title">${activity.name}</h3>
-                <p class="result-description">${activity.city} • ${activity.category}</p>
-                <div class="result-meta">
-                    <span class="result-rating">⭐ ${activity.rating}</span>
-                    <span class="result-price">${activity.price === 'budget' ? '$' : activity.price === 'moderate' ? '$$' : '$$$'}</span>
-                </div>
-                <button class="btn btn-sm btn-primary mt-sm" onclick="viewActivityDetails(${activity.id})">View Details</button>
-            </div>
-        </div>
-    `).join('');
+                    < div class="result-card" >
+                        <img src="${activity.image}" alt="${activity.name}" class="result-image" loading="lazy">
+                            <div class="result-content">
+                                <h3 class="result-title">${activity.name}</h3>
+                                <p class="result-description">${activity.city} • ${activity.category}</p>
+                                <div class="result-meta">
+                                    <span class="result-rating">⭐ ${activity.rating}</span>
+                                    <span class="result-price">${activity.price === 'budget' ? '$' : activity.price === 'moderate' ? '$$' : '$$$'}</span>
+                                </div>
+                                <button class="btn btn-sm btn-primary mt-sm" onclick="viewActivityDetails(${activity.id})">View Details</button>
+                            </div>
+                        </div>
+                `).join('');
 }
 
 function viewActivityDetails(activityId) {
     const activity = MOCK_ACTIVITIES.find(a => a.id === activityId);
     if (activity) {
-        alert(`Activity: ${activity.name}\nLocation: ${activity.city}\nCategory: ${activity.category}\nRating: ${activity.rating}⭐\n\n(Full details view coming soon!)`);
+        alert(`Activity: ${activity.name} \nLocation: ${activity.city} \nCategory: ${activity.category} \nRating: ${activity.rating}⭐\n\n(Full details view coming soon!)`);
     }
 }
 
@@ -698,8 +761,8 @@ function loadItineraryBuilder() {
     if (!trip) return;
 
     document.getElementById('itinerary-trip-name').textContent = trip.name;
-    document.getElementById('itinerary-dates').textContent = `${formatDate(trip.startDate)} - ${formatDate(trip.endDate)}`;
-    document.getElementById('itinerary-budget-display').textContent = `Budget: ${getCurrencySymbol(trip.currency)}${Number(trip.budget).toLocaleString()}`;
+    document.getElementById('itinerary-dates').textContent = `${formatDate(trip.startDate)} - ${formatDate(trip.endDate)} `;
+    document.getElementById('itinerary-budget-display').textContent = `Budget: ${getCurrencySymbol(trip.currency)}${Number(trip.budget).toLocaleString()} `;
 
     const container = document.getElementById('itinerary-days');
     const days = calculateDays(trip.startDate, trip.endDate);
@@ -721,19 +784,19 @@ function createDayElement(dayNumber, trip) {
     const div = document.createElement('div');
     div.className = 'itinerary-day';
     div.innerHTML = `
-        <div class="day-header" onclick="toggleDay(this)">
+                    < div class="day-header" onclick = "toggleDay(this)" >
             <div class="day-title">Day ${dayNumber}</div>
             <div class="day-toggle">▼</div>
-        </div>
-        <div class="day-content">
-            <div class="activities-list" id="day-${dayNumber}-activities">
-                <!-- Activities will be added here -->
-            </div>
-            <button class="add-activity-btn" onclick="addActivity(${dayNumber})">
-                ➕ Add Activity
-            </button>
-        </div>
-    `;
+        </div >
+                    <div class="day-content">
+                        <div class="activities-list" id="day-${dayNumber}-activities">
+                            <!-- Activities will be added here -->
+                        </div>
+                        <button class="add-activity-btn" onclick="addActivity(${dayNumber})">
+                            ➕ Add Activity
+                        </button>
+                    </div>
+                `;
     return div;
 }
 
@@ -750,21 +813,21 @@ function addActivity(dayNumber) {
     const time = prompt('Time (e.g., 09:00 AM):');
     const cost = prompt('Estimated cost:');
 
-    const container = document.getElementById(`day-${dayNumber}-activities`);
+    const container = document.getElementById(`day - ${dayNumber} -activities`);
     const activityDiv = document.createElement('div');
     activityDiv.className = 'activity-item';
     activityDiv.innerHTML = `
-        <div class="activity-header">
+                    < div class="activity-header" >
             <div class="activity-name">${name}</div>
             <div class="activity-actions">
                 <button class="btn btn-icon btn-sm" onclick="this.parentElement.parentElement.parentElement.remove()">🗑️</button>
             </div>
-        </div>
-        <div class="activity-details">
-            <div>⏰ ${time || 'Not set'}</div>
-            <div>💰 ${cost || 'Not set'}</div>
-        </div>
-    `;
+        </div >
+                    <div class="activity-details">
+                        <div>⏰ ${time || 'Not set'}</div>
+                        <div>💰 ${cost || 'Not set'}</div>
+                    </div>
+                `;
     container.appendChild(activityDiv);
 }
 
@@ -793,13 +856,13 @@ function loadItineraryView() {
     if (!trip) return;
 
     document.getElementById('view-trip-name').textContent = trip.name;
-    document.getElementById('view-trip-dates').textContent = `${formatDate(trip.startDate)} - ${formatDate(trip.endDate)}`;
-    document.getElementById('view-trip-destination').textContent = `📍 ${trip.destination}`;
+    document.getElementById('view-trip-dates').textContent = `${formatDate(trip.startDate)} - ${formatDate(trip.endDate)} `;
+    document.getElementById('view-trip-destination').textContent = `📍 ${trip.stops && trip.stops.length > 0 ? trip.stops[0].city : 'Undecided'} `;
 
     const currencySymbol = getCurrencySymbol(trip.currency);
-    document.getElementById('view-total-budget').textContent = `${currencySymbol}${Number(trip.budget).toLocaleString()}`;
-    document.getElementById('view-spent-budget').textContent = `${currencySymbol}0`;
-    document.getElementById('view-remaining-budget').textContent = `${currencySymbol}${Number(trip.budget).toLocaleString()}`;
+    document.getElementById('view-total-budget').textContent = `${currencySymbol}${Number(trip.budget).toLocaleString()} `;
+    document.getElementById('view-spent-budget').textContent = `${currencySymbol} 0`;
+    document.getElementById('view-remaining-budget').textContent = `${currencySymbol}${Number(trip.budget).toLocaleString()} `;
 }
 
 function addExpense() {
@@ -809,7 +872,7 @@ function addExpense() {
     const amount = prompt('Amount:');
     if (!amount) return;
 
-    showToast(`Expense "${name}" added: $${amount}`, 'success');
+    showToast(`Expense "${name}" added: $${amount} `, 'success');
 }
 
 window.addExpense = addExpense;
@@ -861,7 +924,7 @@ function renderCommunityPosts(posts) {
     }
 
     container.innerHTML = posts.map(post => `
-        <div class="post-card">
+                    < div class="post-card" >
             <div class="post-header">
                 <div class="post-avatar">👤</div>
                 <div class="post-user-info">
@@ -871,19 +934,19 @@ function renderCommunityPosts(posts) {
             </div>
             <div class="post-content">${post.content}</div>
             ${post.location ? `<div class="post-location">📍 ${post.location}</div>` : ''}
-            <div class="post-actions">
-                <button class="post-action-btn ${post.liked ? 'liked' : ''}" onclick="toggleLike('${post.id}')">
-                    ❤️ ${post.likes || 0}
-                </button>
-                <button class="post-action-btn" onclick="commentOnPost('${post.id}')">
-                    💬 ${post.comments?.length || 0}
-                </button>
-                <button class="post-action-btn" onclick="sharePost('${post.id}')">
-                    📤 Share
-                </button>
-            </div>
-        </div>
-    `).join('');
+                <div class="post-actions">
+                    <button class="post-action-btn ${post.liked ? 'liked' : ''}" onclick="toggleLike('${post.id}')">
+                        ❤️ ${post.likes || 0}
+                    </button>
+                    <button class="post-action-btn" onclick="commentOnPost('${post.id}')">
+                        💬 ${post.comments?.length || 0}
+                    </button>
+                    <button class="post-action-btn" onclick="sharePost('${post.id}')">
+                        📤 Share
+                    </button>
+                </div>
+        </div >
+                    `).join('');
 }
 
 function createPost() {
@@ -896,7 +959,7 @@ function createPost() {
     const newPost = {
         id: generateId(),
         userId: AppState.currentUser.id,
-        username: `${AppState.currentUser.firstName} ${AppState.currentUser.lastName}`,
+        username: `${AppState.currentUser.firstName} ${AppState.currentUser.lastName} `,
         content,
         location,
         likes: 0,
@@ -976,7 +1039,7 @@ function renderCalendar() {
     // Day headers
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     dayNames.forEach(day => {
-        html += `<div class="calendar-day-header">${day}</div>`;
+        html += `< div class="calendar-day-header" > ${day}</div > `;
     });
 
     // Empty cells before first day
@@ -998,15 +1061,16 @@ function renderCalendar() {
         });
 
         html += `
-            <div class="calendar-day ${isToday ? 'today' : ''}">
-                <div class="calendar-day-number">${day}</div>
+                    < div class="calendar-day ${isToday ? 'today' : ''}" >
+                        <div class="calendar-day-number">${day}</div>
                 ${dayTrips.map(trip => `
                     <div class="calendar-trip-marker ${trip.status}" title="${trip.name}">
                         ${trip.name}
                     </div>
-                `).join('')}
-            </div>
-        `;
+                `).join('')
+            }
+            </div >
+                    `;
     }
 
     html += '</div>';
@@ -1067,7 +1131,7 @@ function loadAdminUsers() {
     const container = document.getElementById('admin-users-table');
 
     container.innerHTML = `
-        <table>
+                    < table >
             <thead>
                 <tr>
                     <th>Name</th>
@@ -1090,8 +1154,8 @@ function loadAdminUsers() {
                     </tr>
                 `).join('')}
             </tbody>
-        </table>
-    `;
+        </table >
+                    `;
 }
 
 function switchAdminTab(tab) {
@@ -1099,7 +1163,7 @@ function switchAdminTab(tab) {
     const contents = document.querySelectorAll('.admin-tab-content');
 
     tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-    contents.forEach(c => c.classList.toggle('active', c.id === `admin-${tab}-tab`));
+    contents.forEach(c => c.classList.toggle('active', c.id === `admin - ${tab} -tab`));
 
     AppState.adminView = tab;
 }
@@ -1110,7 +1174,7 @@ function viewUserDetails(userId) {
     const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
     const user = users.find(u => u.id === userId);
     if (user) {
-        alert(`User: ${user.firstName} ${user.lastName}\nEmail: ${user.email}\nLocation: ${user.city}, ${user.country}\nJoined: ${formatDate(user.joinedDate)}\n\n(Full user management coming soon!)`);
+        alert(`User: ${user.firstName} ${user.lastName} \nEmail: ${user.email} \nLocation: ${user.city}, ${user.country} \nJoined: ${formatDate(user.joinedDate)} \n\n(Full user management coming soon!)`);
     }
 }
 
@@ -1271,6 +1335,14 @@ document.addEventListener('DOMContentLoaded', function () {
         searchInput.addEventListener('input', debounce(loadSearchResults, 300));
     }
 
+    // Setup Trip Destination Autocomplete/Suggestions
+    const destInput = document.getElementById('trip-destination');
+    if (destInput) {
+        destInput.addEventListener('input', debounce((e) => {
+            loadSuggestions(e.target.value);
+        }, 500));
+    }
+
     // Setup trip name character counter
     const tripNameInput = document.getElementById('trip-name');
     if (tripNameInput) {
@@ -1295,3 +1367,6 @@ function debounce(func, wait) {
         timeout = setTimeout(later, wait);
     };
 }
+
+
+
