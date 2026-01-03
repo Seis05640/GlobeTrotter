@@ -181,103 +181,93 @@
         <!-- ===================================
          SCREEN 3: MAIN LANDING PAGE
          =================================== -->
-        <div class="screen" id="landing-screen">
-            <!-- Navigation Bar -->
-            <nav class="navbar">
-                <div class="navbar-container">
-                    <div class="navbar-brand" onclick="navigateTo('landing')">
-                        <span class="navbar-logo">🌍</span>
-                        <span class="navbar-title">GlobeTrotter</span>
-                    </div>
-                    <div class="navbar-menu">
-                        <a href="#" onclick="navigateTo('landing')" class="navbar-link active">Home</a>
-                        <a href="#" onclick="navigateTo('search')" class="navbar-link">Explore</a>
-                        <a href="#" onclick="navigateTo('trip-list')" class="navbar-link">My Trips</a>
-                        <a href="#" onclick="navigateTo('community')" class="navbar-link">Community</a>
-                        <a href="#" onclick="navigateTo('calendar')" class="navbar-link">Calendar</a>
-                        <div class="navbar-profile" onclick="navigateTo('profile')">
-                            <div class="navbar-avatar">👤</div>
+        <!-- ===================================
+         SCREEN 3: MAIN APP (Itinerary/Calendar/Budget)
+         =================================== -->
+        <div class="screen active" id="main-app-screen">
+            <!-- Header -->
+            <header style="padding: 2rem; text-align: center; margin-bottom: 2rem;">
+                <h1
+                    style="font-size: 2.5rem; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; text-align: center;">
+                    GlobeTrotter
+                </h1>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="container" style="padding-bottom: 100px;">
+
+                <!-- View: Itinerary Builder -->
+                <div id="view-itinerary" class="app-view active">
+                    <div class="itinerary-builder-component">
+                        <!-- Itinerary content will go here -->
+                        <div class="glass-card" style="padding: 2rem; text-align: center; margin-bottom: 2rem;">
+                            <h2>Your Itinerary</h2>
+                            <p class="text-muted">Start planning your trip below.</p>
+                            <button class="btn btn-primary mt-md" onclick="navigateTo('create-trip')">Create New
+                                Trip</button>
                         </div>
+
+                        <!-- Recent Trips List (Placeholder) -->
+                        <div id="itinerary-list-container"></div>
                     </div>
                 </div>
+
+                <!-- View: Calendar -->
+                <div id="view-calendar" class="app-view" style="display: none;">
+                    <div class="glass-card" style="padding: 2rem;">
+                        <h2>Trip Calendar</h2>
+                        <div id="calendar-root"></div>
+                    </div>
+                </div>
+
+                <!-- View: Budget -->
+                <div id="view-budget" class="app-view" style="display: none;">
+                    <div class="glass-card" style="padding: 2rem;">
+                        <h2>Budget Dashboard</h2>
+                        <div id="budget-root"></div>
+                    </div>
+                </div>
+
+            </main>
+
+            <!-- Bottom Navigation Bar (Glassmorphism) -->
+            <nav class="glass" style="
+                position: fixed;
+                bottom: 2rem;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                gap: 1rem;
+                padding: 0.5rem;
+                border-radius: 9999px;
+                z-index: 50;
+            ">
+                <a href="#" class="nav-link active" onclick="switchMainView('itinerary')" style="
+                    padding: 0.75rem 1.5rem;
+                    border-radius: 9999px;
+                    text-decoration: none;
+                    color: #fff;
+                    background: linear-gradient(135deg, var(--primary), var(--secondary));
+                    font-weight: 500;
+                    transition: all 0.3s ease;
+                ">Itinerary</a>
+                <a href="#" class="nav-link" onclick="switchMainView('calendar')" style="
+                    padding: 0.75rem 1.5rem;
+                    border-radius: 9999px;
+                    text-decoration: none;
+                    color: var(--text-muted);
+                    font-weight: 500;
+                    transition: all 0.3s ease;
+                ">Calendar</a>
+                <a href="#" class="nav-link" onclick="switchMainView('budget')" style="
+                    padding: 0.75rem 1.5rem;
+                    border-radius: 9999px;
+                    text-decoration: none;
+                    color: var(--text-muted);
+                    font-weight: 500;
+                    transition: all 0.3s ease;
+                ">Budget</a>
             </nav>
-
-            <!-- Hero Banner Carousel -->
-            <section class="hero-banner">
-                <div class="hero-carousel" id="hero-carousel">
-                    <div class="hero-slide active"
-                        style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop');">
-                        <div class="hero-overlay"></div>
-                        <div class="hero-content">
-                            <h1 class="hero-title">Discover Your Next Adventure</h1>
-                            <p class="hero-subtitle">Plan, explore, and experience the world like never before</p>
-                            <button class="btn btn-hero" onclick="navigateTo('create-trip')">Start Planning</button>
-                        </div>
-                    </div>
-                    <div class="hero-slide"
-                        style="background-image: url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1920&h=1080&fit=crop');">
-                        <div class="hero-overlay"></div>
-                        <div class="hero-content">
-                            <h1 class="hero-title">Explore Hidden Gems</h1>
-                            <p class="hero-subtitle">Find unique destinations and create unforgettable memories</p>
-                            <button class="btn btn-hero" onclick="navigateTo('search')">Explore Now</button>
-                        </div>
-                    </div>
-                    <div class="hero-slide"
-                        style="background-image: url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&h=1080&fit=crop');">
-                        <div class="hero-overlay"></div>
-                        <div class="hero-content">
-                            <h1 class="hero-title">Connect with Travelers</h1>
-                            <p class="hero-subtitle">Share experiences and get inspired by the community</p>
-                            <button class="btn btn-hero" onclick="navigateTo('community')">Join Community</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="hero-indicators" id="hero-indicators"></div>
-            </section>
-
-            <!-- Search Bar -->
-            <section class="landing-search">
-                <div class="container">
-                    <div class="search-box-large">
-                        <input type="text" class="search-input-large"
-                            placeholder="🔍 Search destinations, activities, or trips..." id="landing-search-input">
-                        <button class="btn btn-primary search-btn-large"
-                            onclick="performLandingSearch()">Search</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Top Regional Selections -->
-            <section class="landing-section">
-                <div class="container">
-                    <h2 class="section-title">Popular Destinations</h2>
-                    <p class="section-subtitle">Discover the most loved travel destinations</p>
-
-                    <div class="destination-grid" id="destination-grid">
-                        <!-- Destinations will be loaded dynamically -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- Previous Trips Carousel -->
-            <section class="landing-section bg-light">
-                <div class="container">
-                    <div class="section-header">
-                        <h2 class="section-title">Your Recent Trips</h2>
-                        <a href="#" onclick="navigateTo('trip-list')" class="link-text">View All →</a>
-                    </div>
-
-                    <div class="trips-carousel" id="recent-trips-carousel">
-                        <!-- Recent trips will be loaded dynamically -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- Quick Actions FAB -->
-            <button class="fab" onclick="navigateTo('create-trip')" title="Plan a new trip">
-                ➕
-            </button>
         </div>
 
         <!-- ===================================

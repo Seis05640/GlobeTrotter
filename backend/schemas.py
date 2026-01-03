@@ -96,8 +96,6 @@ class MessageResponse(BaseModel):
 class BudgetResponse(BaseModel):
     trip_id: int
     total_budget: float
-    trip_id: int
-    total_budget: float
     breakdown: List[StopBudgetBreakdown]
 
 

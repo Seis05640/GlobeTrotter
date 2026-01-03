@@ -109,15 +109,19 @@ function navigateTo(screenId) {
     });
 
     // Show target screen
-    const targetScreen = document.getElementById(`${screenId}-screen`);
+    let targetId = screenId;
+    if (screenId === 'landing') targetId = 'main-app'; // Redirect landing to main-app
+
+    const targetScreen = document.getElementById(`${targetId}-screen`);
     if (targetScreen) {
         targetScreen.classList.add('active');
-        AppState.currentScreen = screenId;
+        AppState.currentScreen = targetId;
 
         // Load screen-specific data
-        switch (screenId) {
-            case 'landing':
-                loadLandingPage();
+        switch (targetId) {
+            case 'main-app':
+                // Default to itinerary view when entering the main app
+                switchMainView('itinerary');
                 break;
             case 'trip-list':
                 loadTripList();
@@ -150,12 +154,37 @@ window.navigateTo = navigateTo;
 // AUTHENTICATION
 // ===================================
 function initAuth() {
+    seedDemoUser(); // Ensure demo user exists
     const savedUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
     if (savedUser) {
         AppState.currentUser = JSON.parse(savedUser);
         navigateTo('landing');
     } else {
         navigateTo('login');
+    }
+}
+
+function seedDemoUser() {
+    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+    if (!users.find(u => u.email === 'demo@example.com')) {
+        const demoUser = {
+            id: 'demo-user-id',
+            firstName: 'Demo',
+            lastName: 'Traveler',
+            email: 'demo@example.com',
+            phone: '1234567890',
+            city: 'Paris',
+            country: 'France',
+            bio: 'I love traveling!',
+            password: 'password',
+            username: 'demo',
+            profilePhoto: null,
+            joinedDate: new Date().toISOString(),
+            isAdmin: false
+        };
+        users.push(demoUser);
+        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+        console.log('Demo user seeded');
     }
 }
 
@@ -1372,3 +1401,277 @@ function debounce(func, wait) {
 
 
 
+// ===================================
+// MAIN APP VIEW SWITCHER
+// ===================================
+
+function switchMainView(viewId) {
+    // 1. Hide all app-views
+    document.querySelectorAll('.app-view').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.app-view').forEach(el => el.classList.remove('active'));
+
+    // 2. Show target view
+    const target = document.getElementById(`view-${viewId}`);
+    if (target) {
+        target.style.display = 'block';
+        setTimeout(() => target.classList.add('active'), 10);
+    }
+
+    // 3. Update Nav Links
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.style.background = 'transparent';
+        link.style.color = 'var(--text-muted)';
+        link.classList.remove('active');
+    });
+
+    // 4. Highlight active link
+    // simplified selection based on onclick attribute for now
+    const activeLink = Array.from(document.querySelectorAll('.nav-link'))
+        .find(link => link.getAttribute('onclick').includes(viewId));
+
+    if (activeLink) {
+        activeLink.style.background = 'linear-gradient(135deg, var(--primary), var(--secondary))';
+        activeLink.style.color = '#fff';
+        activeLink.classList.add('active');
+    }
+
+    // 5. Load Data
+    if (viewId === 'budget') loadBudgetDashboard();
+    if (viewId === 'calendar') loadCalendarView();
+    if (viewId === 'itinerary') loadItineraryList();
+}
+
+window.switchMainView = switchMainView;
+
+
+// ===================================
+// LOAD BUDGET DASHBOARD
+// ===================================
+function loadBudgetDashboard() {
+    const root = document.getElementById('budget-root');
+    const trip = AppState.selectedTrip;
+
+    if (!trip) {
+        root.innerHTML = '<p class="text-muted text-center p-lg">Please select a trip first to view the budget.</p>';
+        return;
+    }
+
+    // Initialize with skeleton or loader
+    root.innerHTML = '<div class="loader">Loading budget...</div>';
+
+    // Fetch real budget from backend
+    fetch(`${API_BASE}/trip/${trip.id}/budget`)
+        .then(res => {
+            if (!res.ok) throw new Error('Failed to fetch budget');
+            return res.json();
+        })
+        .then(budgetData => {
+            renderBudgetDashboard(trip, budgetData);
+        })
+        .catch(err => {
+            console.error(err);
+            // Fallback for demo if backend fails or trip serves from local storage only
+            renderMockBudget(trip);
+        });
+}
+
+function renderBudgetDashboard(trip, budgetData) {
+    const root = document.getElementById('budget-root');
+
+    // total_budget from backend is actually the "Total Cost" of stays + activities
+    const totalCost = budgetData.total_budget;
+
+    // We don't have a "Limit" stored in backend Trip model yet, so we'll mock a Target Budget
+    // or assume a healthy buffer above the cost for the demo visual
+    const targetBudget = Math.max(totalCost * 1.2, 5000); // Mock target
+    const remaining = targetBudget - totalCost;
+    const percentage = Math.min(100, Math.round((totalCost / targetBudget) * 100));
+
+    // Generate Expense List from Breakdown
+    const expenseListHTML = budgetData.breakdown.map(item => `
+        <li class="expense-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--glass-border);">
+            <div>
+                <span style="font-weight: 500;">🏨 Stay in ${item.city}</span>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">${item.duration_days} nights @ $3000/night</div>
+            </div>
+            <span style="font-weight: 600;">${getCurrencySymbol('USD')}${item.stay_cost.toLocaleString()}</span>
+        </li>
+        ${item.activities_cost > 0 ? `
+        <li class="expense-item" style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--glass-border);">
+            <div>
+                <span style="font-weight: 500;">🎡 Activities in ${item.city}</span>
+            </div>
+            <span style="font-weight: 600;">${getCurrencySymbol('USD')}${item.activities_cost.toLocaleString()}</span>
+        </li>
+        ` : ''}
+    `).join('');
+
+    root.innerHTML = `
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">$${totalCost.toLocaleString()}</div>
+                <div class="stat-label">Estimated Cost</div>
+            </div>
+             <div class="stat-card">
+                <div class="stat-value" style="color: ${remaining < 0 ? 'var(--error-color)' : 'var(--success-color)'}">
+                    $${remaining.toLocaleString()}
+                </div>
+                <div class="stat-label">Remaining (vs Mock Budget)</div>
+            </div>
+             <div class="stat-card">
+                <div class="stat-value">${percentage}%</div>
+                <div class="stat-label">Budget Used</div>
+            </div>
+        </div>
+
+        <div class="card mt-md">
+            <h3>Budget Health</h3>
+            <div style="margin-top: 1rem; width: 100%; height: 20px; background: var(--surface); border-radius: 999px; overflow: hidden; position: relative;">
+                <div style="width: ${percentage}%; height: 100%; background: linear-gradient(90deg, var(--success-color), var(--warning-color)); transition: width 1s ease;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; color: var(--text-muted); font-size: 0.875rem;">
+                <span>$0</span>
+                <span>$${targetBudget.toLocaleString()}</span>
+            </div>
+        </div>
+
+        <div class="card mt-md">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3>Expenses Breakdown</h3>
+            </div>
+            <ul id="expense-list-ul" style="list-style: none;">
+                ${expenseListHTML || '<p class="text-muted">No expenses recorded yet.</p>'}
+            </ul>
+        </div>
+    `;
+}
+
+function renderMockBudget(trip) {
+    const root = document.getElementById('budget-root');
+    root.innerHTML = `<p class="text-error">Unable to load budget data. Backend might be unreachable.</p>`;
+}
+
+// ===================================
+// LOAD CALENDAR VIEW
+// ===================================
+function loadCalendarView() {
+    const root = document.getElementById('calendar-root');
+    const trip = AppState.selectedTrip;
+
+    if (!trip) {
+        root.innerHTML = '<p class="text-muted text-center p-lg">Please select a trip first to view the calendar.</p>';
+        return;
+    }
+
+    const startDate = new Date(trip.start_date || trip.startDate); // Handle both camel/snake case
+    const endDate = new Date(trip.end_date || trip.endDate);
+    const monthName = startDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+    // Generate days grid
+    const startDay = startDate.getDay(); // 0 is Sunday
+    const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+    let calendarGridHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <button class="btn btn-icon btn-sm">←</button>
+            <h3 style="margin: 0;">${monthName}</h3>
+            <button class="btn btn-icon btn-sm">→</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; text-align: center; margin-bottom: 0.5rem;">
+            <div class="text-muted font-bold text-xs">SUN</div>
+            <div class="text-muted font-bold text-xs">MON</div>
+            <div class="text-muted font-bold text-xs">TUE</div>
+            <div class="text-muted font-bold text-xs">WED</div>
+            <div class="text-muted font-bold text-xs">THU</div>
+            <div class="text-muted font-bold text-xs">FRI</div>
+            <div class="text-muted font-bold text-xs">SAT</div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem;">
+    `;
+
+    // Empty cells for days before start of month/trip context
+    for (let i = 0; i < startDay; i++) {
+        calendarGridHTML += `<div></div>`;
+    }
+
+    // Map Stops/Activities to Dates
+    // Stops are sequential. We need to map which days belong to which stop.
+    // trip.stops is ordered ? We should assume so or sort.
+    let stops = trip.stops || [];
+    // If pulling from backend, stops are there.
+    // We need to map date -> activities/city
+
+    // Create a map of date -> {city, activities}
+    const dayMap = {};
+    let currentCursor = new Date(startDate);
+
+    stops.forEach(stop => {
+        for (let d = 0; d < stop.duration_days; d++) {
+            const dateKey = currentCursor.toISOString().split('T')[0];
+            dayMap[dateKey] = {
+                city: stop.city,
+                activities: stop.activities || [],
+                isStart: d === 0
+            };
+            // Increment cursor
+            currentCursor.setDate(currentCursor.getDate() + 1);
+        }
+    });
+
+    for (let i = 0; i < totalDays; i++) {
+        const currentDate = new Date(startDate);
+        currentDate.setDate(startDate.getDate() + i);
+        const dayNum = currentDate.getDate();
+        const dateKey = currentDate.toISOString().split('T')[0];
+
+        const dayData = dayMap[dateKey];
+        const city = dayData ? dayData.city : '';
+        const activities = dayData ? dayData.activities : [];
+        const isStart = dayData ? dayData.isStart : false;
+
+        calendarGridHTML += `
+            <div class="glass" style="
+                padding: 0.5rem; 
+                min-height: 80px; 
+                border-radius: var(--radius-md); 
+                position: relative; 
+                border: ${isStart ? '1px solid var(--primary)' : '1px solid var(--glass-border)'};
+                background: ${isStart ? 'rgba(99, 102, 241, 0.1)' : 'var(--glass-bg)'};
+                transition: transform 0.2s;
+                cursor: pointer;
+            " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="font-weight: bold; font-size: 0.9rem;">${dayNum}</span>
+                    ${city ? `<span style="font-size: 0.6rem; color: var(--text-muted);">${city}</span>` : ''}
+                </div>
+                
+                ${activities.length > 0 ? `<div style="margin-top: 4px; font-size: 0.65rem; background: var(--surface); padding: 2px 4px; border-radius: 4px; color: var(--text-secondary);">${activities.length} Activities</div>` : ''}
+                ${isStart ? `<div style="margin-top: 4px; font-size: 0.65rem; background: var(--primary); padding: 2px 4px; border-radius: 4px; color: white;">Arrive</div>` : ''}
+            </div>
+        `;
+    }
+
+    calendarGridHTML += `</div>`;
+    root.innerHTML = calendarGridHTML;
+}
+
+function getDaysDifference(date1, date2) {
+    const d1 = new Date(date1);
+    const d2 = new Date(date2);
+    return Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+}
+
+
+function loadItineraryList() {
+    const container = document.getElementById('itinerary-list-container');
+    container.innerHTML = `
+        <h3>Your Upcoming Trips</h3>
+         <div class="trip-card" onclick="alert('Trip details coming soon')" style="margin-top: 1rem;">
+            <div class="trip-image" style="background-image: url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800'); height: 150px; background-size: cover; border-radius: var(--radius-md);"></div>
+            <div style="padding: 1rem;">
+                <h3>Paris Adventure</h3>
+                <p class="text-muted">June 15 - June 20, 2026</p>
+            </div>
+        </div>
+    `;
+}
