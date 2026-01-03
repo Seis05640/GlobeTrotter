@@ -373,10 +373,12 @@ function handleCreateTrip(event) {
     event.preventDefault();
 
     const name = document.getElementById('trip-name').value;
-    const startDate = document.getElementById('start-date').value;
-    const endDate = document.getElementById('end-date').value;
+    const startDate = document.getElementById('trip-start-date').value;
+    const endDate = document.getElementById('trip-end-date').value;
     const destination = document.getElementById('trip-destination').value; // Get destination
     const budget = parseFloat(document.getElementById('trip-budget').value) || 0;
+
+    console.log('Attempting to create trip:', { name, startDate, endDate, destination, budget });
 
     if (!name || !startDate || !endDate || !destination) {
         showToast('Please fill in all required fields', 'error');
@@ -1039,7 +1041,7 @@ function renderCalendar() {
     // Day headers
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     dayNames.forEach(day => {
-        html += `< div class="calendar-day-header" > ${day}</div > `;
+        html += `<div class="calendar-day-header">${day}</div>`;
     });
 
     // Empty cells before first day
@@ -1061,7 +1063,7 @@ function renderCalendar() {
         });
 
         html += `
-                    < div class="calendar-day ${isToday ? 'today' : ''}" >
+                    <div class="calendar-day ${isToday ? 'today' : ''}">
                         <div class="calendar-day-number">${day}</div>
                 ${dayTrips.map(trip => `
                     <div class="calendar-trip-marker ${trip.status}" title="${trip.name}">
@@ -1069,7 +1071,7 @@ function renderCalendar() {
                     </div>
                 `).join('')
             }
-            </div >
+            </div>
                     `;
     }
 
