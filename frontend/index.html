@@ -627,6 +627,11 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Chat FAB -->
+            <button class="fab fab-chat" onclick="openChat()" title="Group Chat">
+                💬
+            </button>
         </div>
 
         <!-- ===================================
@@ -826,9 +831,62 @@
 
     </div>
 
+    <!-- ===================================
+         CHAT MODAL
+         =================================== -->
+    <div class="chat-modal" id="chat-modal">
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <h3>💬 Trip Chat</h3>
+                    <span id="chat-status" class="status-offline">Connecting...</span>
+                </div>
+                <button class="btn btn-icon" onclick="closeChat()">✕</button>
+            </div>
+
+            <div class="chat-messages" id="chat-messages">
+                <div class="message system">
+                    <p>Welcome to the trip chat!</p>
+                </div>
+            </div>
+
+            <form class="chat-input-area" onsubmit="sendChatMessage(event)">
+                <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off">
+                <button type="submit" class="btn btn-primary btn-icon">➤</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loading-overlay">
         <div class="spinner"></div>
+    </div>
+
+
+    <!-- ===================================
+         CHAT MODAL
+         =================================== -->
+    <div class="chat-modal" id="chat-modal">
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <h3>💬 Trip Chat</h3>
+                    <span id="chat-status" class="status-offline">Connecting...</span>
+                </div>
+                <button class="btn btn-icon" onclick="closeChat()">✕</button>
+            </div>
+
+            <div class="chat-messages" id="chat-messages">
+                <div class="message system">
+                    <p>Welcome to the trip chat!</p>
+                </div>
+            </div>
+
+            <form class="chat-input-area" onsubmit="sendChatMessage(event)">
+                <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off">
+                <button type="submit" class="btn btn-primary btn-icon">➤</button>
+            </form>
+        </div>
     </div>
 
     <!-- Modals will be added dynamically -->

@@ -1123,6 +1123,127 @@ function saveAdminSettings() {
 window.saveAdminSettings = saveAdminSettings;
 
 // ===================================
+// CHAT & WEBSOCKET
+// ===================================
+let chatSocket = null;
+let reconnectInterval = null;
+
+function openChat() {
+    const modal = document.getElementById('chat-modal');
+    modal.classList.add('active');
+
+    if (!chatSocket || chatSocket.readyState !== WebSocket.OPEN) {
+        connectChat();
+    }
+}
+
+window.openChat = openChat;
+
+function closeChat() {
+    document.getElementById('chat-modal').classList.remove('active');
+}
+
+window.closeChat = closeChat;
+
+function connectChat() {
+    if (!AppState.selectedTrip) return;
+
+    const tripId = AppState.selectedTrip.id;
+    // Use a unique client ID, e.g., user ID or random string
+    const clientId = AppState.currentUser ? AppState.currentUser.id : generateId();
+
+    const statusEl = document.getElementById('chat-status');
+    statusEl.textContent = 'Connecting...';
+    statusEl.className = 'status-offline';
+
+    // IMPORTANT: Change URL to match your backend port (usually 8000 for FastAPI)
+    // If serving via same origin, specific port might be needed if dev server is different.
+    // Assuming backend is at localhost:8000 for local dev
+    const wsUrl = `ws://localhost:8000/ws/${tripId}/${clientId}`;
+
+    chatSocket = new WebSocket(wsUrl);
+
+    chatSocket.onopen = function () {
+        console.log("Connected to Chat WS");
+        statusEl.textContent = 'Online';
+        statusEl.className = 'status-online';
+
+        // Load history
+        fetchChatHistory(tripId);
+    };
+
+    chatSocket.onmessage = function (event) {
+        const msg = JSON.parse(event.data);
+        appendMessage(msg);
+    };
+
+    chatSocket.onclose = function () {
+        console.log("Chat WS Disconnected");
+        statusEl.textContent = 'Offline';
+        statusEl.className = 'status-offline';
+        // Auto-reconnect logic could go here
+    };
+
+    chatSocket.onerror = function (error) {
+        console.error("Chat WS Error", error);
+    };
+}
+
+async function fetchChatHistory(tripId) {
+    try {
+        const res = await fetch(`http://localhost:8000/trip/${tripId}/messages`);
+        if (res.ok) {
+            const messages = await res.json();
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '<div class="message system"><p>Welcome to the trip chat!</p></div>';
+            messages.forEach(appendMessage);
+            scrollToBottom();
+        }
+    } catch (e) {
+        console.error("Failed to fetch history", e);
+    }
+}
+
+function sendChatMessage(event) {
+    event.preventDefault();
+    const input = document.getElementById('chat-input');
+    const content = input.value.trim();
+
+    if (content && chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+        chatSocket.send(content);
+        input.value = '';
+    }
+}
+
+window.sendChatMessage = sendChatMessage;
+
+function appendMessage(msg) {
+    const container = document.getElementById('chat-messages');
+    const isMe = msg.sender === (AppState.currentUser ? AppState.currentUser.id : 'me');
+
+    const div = document.createElement('div');
+    div.className = `message ${isMe ? 'sent' : 'received'}`;
+
+    // Attempt to find sender name if possible, else use ID
+    // For demo, just use ID or 'You'
+    const senderName = isMe ? 'You' : (msg.sender === 'System' ? 'System' : 'User ' + msg.sender.substr(0, 4));
+
+    div.innerHTML = `
+        <div class="message-sender">${senderName}</div>
+        <div class="message-content">${msg.content}</div>
+        <div class="message-time">${new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+    `;
+
+    container.appendChild(div);
+    scrollToBottom();
+}
+
+function scrollToBottom() {
+    const container = document.getElementById('chat-messages');
+    container.scrollTop = container.scrollHeight;
+}
+
+// ===================================
 // INITIALIZATION
 // ===================================
 document.addEventListener('DOMContentLoaded', function () {

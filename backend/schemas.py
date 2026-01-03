@@ -5,7 +5,7 @@ Minimal validation for hackathon demo safety.
 
 from pydantic import BaseModel, Field, field_validator
 from typing import List
-from datetime import date
+from datetime import date, datetime
 
 
 # ===== Request Schemas =====
@@ -32,6 +32,11 @@ class StopCreate(BaseModel):
 class ActivityCreate(BaseModel):
     name: str
     cost: float = Field(ge=0)  # Must be >= 0
+
+
+class MessageCreate(BaseModel):
+    sender: str
+    content: str
 
 
 # ===== Response Schemas =====
@@ -75,6 +80,17 @@ class StopBudgetBreakdown(BaseModel):
     stay_cost: float
     activities_cost: float
     total: float
+
+
+class MessageResponse(BaseModel):
+    id: int
+    trip_id: int
+    sender: str
+    content: str
+    timestamp: datetime
+    
+    class Config:
+        from_attributes = True
 
 
 class BudgetResponse(BaseModel):

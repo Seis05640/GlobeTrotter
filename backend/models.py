@@ -3,7 +3,8 @@ Database models for GlobeTrotter.
 Trip -> Stop -> Activity (nested relationships)
 """
 
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date, DateTime
+import datetime
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -18,6 +19,7 @@ class Trip(Base):
     
     # Relationship
     stops = relationship("Stop", back_populates="trip", cascade="all, delete-orphan")
+    messages = relationship("Message", back_populates="trip", cascade="all, delete-orphan")
 
 
 class Stop(Base):
@@ -44,3 +46,16 @@ class Activity(Base):
     
     # Relationship
     stop = relationship("Stop", back_populates="activities")
+
+
+class Message(Base):
+    __tablename__ = "messages"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    trip_id = Column(Integer, ForeignKey("trips.id"), nullable=False)
+    sender = Column(String, nullable=False)
+    content = Column(String, nullable=False)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    
+    # Relationship
+    trip = relationship("Trip", back_populates="messages")

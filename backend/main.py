@@ -3,10 +3,10 @@ FastAPI backend for GlobeTrotter.
 Simple, demo-safe endpoints with SQLite database.
 """
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Dict
 
 import models
 import schemas
@@ -147,6 +147,80 @@ def get_trip_budget(trip_id: int, db: Session = Depends(get_db)):
         total_budget=total_budget,
         breakdown=breakdown
     )
+
+
+
+# ===== Chat / WebSocket Endpoints =====
+
+class ConnectionManager:
+    def __init__(self):
+        # trip_id -> list of active websockets
+        self.active_connections: Dict[int, List[WebSocket]] = {}
+
+    async def connect(self, websocket: WebSocket, trip_id: int):
+        await websocket.accept()
+        if trip_id not in self.active_connections:
+            self.active_connections[trip_id] = []
+        self.active_connections[trip_id].append(websocket)
+
+    def disconnect(self, websocket: WebSocket, trip_id: int):
+        if trip_id in self.active_connections:
+            if websocket in self.active_connections[trip_id]:
+                self.active_connections[trip_id].remove(websocket)
+            if not self.active_connections[trip_id]:
+                del self.active_connections[trip_id]
+
+    async def broadcast(self, message: dict, trip_id: int):
+        if trip_id in self.active_connections:
+            for connection in self.active_connections[trip_id]:
+                await connection.send_json(message)
+
+manager = ConnectionManager()
+
+
+@app.get("/trip/{trip_id}/messages", response_model=List[schemas.MessageResponse])
+def get_trip_messages(trip_id: int, db: Session = Depends(get_db)):
+    """Get chat history for a trip."""
+    # Verify trip exists
+    trip = db.query(models.Trip).filter(models.Trip.id == trip_id).first()
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
+    
+    return db.query(models.Message).filter(
+        models.Message.trip_id == trip_id
+    ).order_by(models.Message.timestamp.asc()).all()
+
+
+@app.websocket("/ws/{trip_id}/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, trip_id: int, client_id: str, db: Session = Depends(get_db)):
+    await manager.connect(websocket, trip_id)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            # Save message to DB
+            db_message = models.Message(
+                trip_id=trip_id,
+                sender=client_id,
+                content=data
+            )
+            db.add(db_message)
+            db.commit()
+            db.refresh(db_message)
+            
+            # Broadcast to all connected clients in this trip
+            response = schemas.MessageResponse.model_validate(db_message)
+            msg_dict = {
+                "id": response.id,
+                "trip_id": response.trip_id,
+                "sender": response.sender,
+                "content": response.content,
+                "timestamp": response.timestamp.isoformat()
+            }
+            
+            await manager.broadcast(msg_dict, trip_id)
+            
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, trip_id)
 
 
 # ===== Health Check =====
